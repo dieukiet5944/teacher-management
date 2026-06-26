@@ -1,0 +1,10 @@
+{
+  "javascript.validate.enable": true,
+  "typescript.validate.enable": false,
+  "files.associations": {
+    "*.js": "javascript"
+  },
+  "js/ts.implicitProjectConfig.checkJs": true,
+  "js/ts.implicitProjectConfig.module": "commonjs",
+  "js/ts.implicitProjectConfig.target": "ES2020"
+}
