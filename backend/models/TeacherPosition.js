@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import process from 'node:process';
 
-const collectionName = process.env.MONGODB_POSITIONS_COLLECTION || 'teacher_positions';
+const collectionName = process.env.MONGODB_POSITIONS_COLLECTION || 'teacherpositions';
 
 const teacherPositionSchema = new mongoose.Schema({
   name: { type: String, required: true },

@@ -5,15 +5,20 @@ import User from '../models/User.js';
 const generateRandomCode = async (model) => {
   let code;
   let exists = true;
+  let attempts = 0;
+  const maxAttempts = 20;
 
-  while (exists) {
+  while (exists && attempts < maxAttempts) {
     code = String(Math.floor(100000 + Math.random() * 900000));
     exists = await model.exists({ code, isDeleted: false });
+    attempts++;
   }
 
+  if (exists) throw new Error('Không thể sinh mã ngẫu nhiên. Vui lòng thử lại.');
   return code;
 };
 
+// Cập nhật serializeTeacher cho đầy đủ thông tin theo yêu cầu 1.1
 const serializeTeacher = (teacher) => ({
   _id: teacher._id,
   code: teacher.code,
@@ -22,21 +27,24 @@ const serializeTeacher = (teacher) => ({
   phoneNumber: teacher.userId?.phoneNumber || '',
   address: teacher.userId?.address || '',
   isActive: teacher.isActive,
+  // Thêm vị trí công tác
+  teacherPositions: (teacher.teacherPositions || []).map((pos) => ({
+    _id: pos._id,
+    name: pos.name,
+    code: pos.code,
+    des: pos.des,
+  })),
+  // Học vấn
+  degrees: (teacher.degrees || []).map((d) => ({
+    type: d.type,
+    school: d.school,
+    major: d.major,
+    year: d.year,
+    isGraduated: d.isGraduated,
+  })),
   startDate: teacher.startDate,
   endDate: teacher.endDate,
-  teacherPositions: (teacher.teacherPositions || []).map((position) => ({
-    _id: position._id,
-    name: position.name,
-    code: position.code,
-    des: position.des,
-  })),
-  degrees: (teacher.degrees || []).map((degree) => ({
-    type: degree.type,
-    school: degree.school,
-    major: degree.major,
-    year: degree.year,
-    isGraduated: degree.isGraduated,
-  })),
+  createdAt: teacher.createdAt,
 });
 
 export const getAllTeachers = async (req, res) => {
@@ -54,6 +62,9 @@ export const getAllTeachers = async (req, res) => {
         .limit(limit),
       Teacher.countDocuments({ isDeleted: false }),
     ]);
+
+    console.log("🔥 SAMPLE TEACHER RAW:");
+console.log(JSON.stringify(teachers[0], null, 2));
 
     res.json({
       data: teachers.map(serializeTeacher),
@@ -135,10 +146,31 @@ export const createTeacher = async (req, res) => {
 
 export const getAllPositions = async (req, res) => {
   try {
-    const positions = await TeacherPosition.find({ isDeleted: false }).sort({ createdAt: -1 });
-    res.json(positions);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 10));
+    const skip = (page - 1) * limit;
+
+    const [positions, total] = await Promise.all([
+      TeacherPosition.find({ isDeleted: false })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+
+      TeacherPosition.countDocuments({ isDeleted: false })
+    ]);
+
+    res.json({
+      data: positions,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      }
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 

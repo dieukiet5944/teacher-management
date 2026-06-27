@@ -18,7 +18,12 @@ const teacherSchema = new mongoose.Schema({
   code: { type: String, required: true, unique: true },
   startDate: Date,
   endDate: Date,
-  teacherPositions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'TeacherPosition' }],
+  teacherPositions: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'TeacherPosition'
+  }
+],
   degrees: [degreeSchema]
 }, { timestamps: true });
 

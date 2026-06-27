@@ -1,3 +1,4 @@
+console.log("🔥 THIS IS SERVER.JS VERSION 999");
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -21,11 +22,17 @@ connectDB();
 app.get('/', (req, res) => {
   res.send('✅ Teacher Management API is running...');
 });
+app.get('/ping', (req, res) => {
+  console.log("🔥 PING HIT");
+  res.send("pong");
+});
 
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/positions', positionRoutes);
-app.use('/api/teacher-positions', positionRoutes);
-
+app.use((req, res, next) => {
+  console.log("🔥 REQUEST:", req.method, req.url);
+  next();
+});
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
