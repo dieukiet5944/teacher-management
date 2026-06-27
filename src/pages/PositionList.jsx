@@ -10,32 +10,24 @@ const PositionList = () => {
     total: 0,
     totalPages: 1,
   });
-
   const [loading, setLoading] = useState(false);
-
   const [isOpen, setIsOpen] = useState(false);
-  const [editingPosition, setEditingPosition] = useState(null);
-
-  // ================= FETCH DATA =================
-  const fetchPositions = async (page = 1, limit = 10) => {
+const [editingPosition, setEditingPosition] = useState(null);
+  const fetchPositions = async (page = 1) => {
     setLoading(true);
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/teacher-positions?page=${page}&limit=${limit}`
+        `http://localhost:5000/api/positions?page=${page}&limit=${pagination.limit}`
       );
 
       const result = await res.json();
 
       setPositions(result.data || []);
-      setPagination(result.pagination || {
-        page: 1,
-        limit: 10,
-        total: 0,
-        totalPages: 1,
-      });
+      setPagination(result.pagination || pagination);
+
     } catch (err) {
-      console.error(err);
+      console.error('Fetch positions error:', err);
       setPositions([]);
     } finally {
       setLoading(false);
@@ -43,33 +35,31 @@ const PositionList = () => {
   };
 
   useEffect(() => {
-    fetchPositions();
+    fetchPositions(1);
   }, []);
 
-  // ================= CREATE =================
-  const handleCreate = () => {
-    console.log('clicked create position');
-    setEditingPosition(null);
-    setIsOpen(true);
-  };
-
-  // ================= RELOAD =================
-  const reload = () => {
-    fetchPositions(pagination.page, pagination.limit);
-  };
-
-  // ================= PAGE =================
   const handlePageChange = (newPage) => {
-    fetchPositions(newPage, pagination.limit);
+    if (newPage < 1 || newPage > pagination.totalPages) return;
+
+    setPagination(prev => ({ ...prev, page: newPage }));
+    fetchPositions(newPage);
   };
+
+  const handleCreate = () => {
+  console.log("CLICKED CREATE POSITION");
+  setEditingPosition(null);
+  setIsOpen(true);
+};
+
+const reload = () => {
+  fetchPositions(pagination.page, pagination.limit);
+};
 
   return (
     <div className="bg-white rounded-2xl shadow overflow-hidden">
-
-      {/* HEADER */}
       <div className="px-6 py-5 border-b flex items-center justify-between">
         <h2 className="text-2xl font-semibold text-gray-800">
-          Danh sách vị trí công tác
+          Danh sách vị trí làm việc
         </h2>
 
         <button
@@ -81,7 +71,6 @@ const PositionList = () => {
         </button>
       </div>
 
-      {/* TABLE */}
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -98,7 +87,7 @@ const PositionList = () => {
             {loading ? (
               <tr>
                 <td colSpan="5" className="text-center py-6">
-                  Đang tải...
+                  Loading...
                 </td>
               </tr>
             ) : (
@@ -148,6 +137,7 @@ const PositionList = () => {
       />
     </div>
   );
+
 };
 
 export default PositionList;
